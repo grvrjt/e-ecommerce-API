@@ -5,9 +5,10 @@ const jwt = require("jsonwebtoken");
 
 //REGISTER
 router.post("/register", async (req, res) => {
-  console.log("REQBODY---register->", req.body);
   const newUser = new User({
     userName: req.body.userName,
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
     email: req.body.email,
     password: CryptoJS.AES.encrypt(
       req.body.password,
@@ -17,6 +18,7 @@ router.post("/register", async (req, res) => {
 
   try {
     const savedUser = await newUser.save();
+    console.log("REGISTER USERS--->", savedUser);
     res.status(201).json(savedUser);
   } catch (err) {
     res.status(500).json(err);
@@ -26,24 +28,19 @@ router.post("/register", async (req, res) => {
 //LOGIN
 
 router.post("/login", async (req, res) => {
-  console.log("REQBODY---->", req.body);
   try {
-    const user = await User.findOne({
-      userName: req.body.userName,
-    });
-
-    !user && res.status(401).json("Wrong User Name");
-
+    console.log("LOGINBODY --->,", req.body);
+    const user = await User.findOne({ userName: req.body.userName });
+    !user && res.status(401).json("Wrong credentials!");
+    console.log("LOGIN USER---->", user);
     const hashedPassword = CryptoJS.AES.decrypt(
       user.password,
       process.env.PASS_SEC
     );
+    const OriginalPassword = hashedPassword.toString(CryptoJS.enc.Utf8);
 
-    const originalPassword = hashedPassword.toString(CryptoJS.enc.Utf8);
-
-    const inputPassword = req.body.password;
-    console.log("originalPassword---,", originalPassword);
-    originalPassword != inputPassword && res.status(401).json("Wrong Password");
+    OriginalPassword !== req.body.password &&
+      res.status(401).json("Wrong credentials!");
 
     const accessToken = jwt.sign(
       {
@@ -55,8 +52,10 @@ router.post("/login", async (req, res) => {
     );
 
     const { password, ...others } = user._doc;
+
     res.status(200).json({ ...others, accessToken });
   } catch (err) {
+    console.log("LOGIN ERROR--->", err);
     res.status(500).json(err);
   }
 });
