@@ -9,11 +9,43 @@ const router = require("express").Router();
 
 //CREATE
 
-router.post("/", verifyToken, async (req, res) => {
-  const newCart = new Cart(req.body);
+router.post("/", async (req, res) => {
+  // verifyToken added later
+  const {
+    _id,
+    title,
+    img,
+    desc,
+    categories,
+    size,
+    color,
+    price,
+    quantity,
+    userId,
+    inStock,
+  } = req.body;
 
+  const product = {
+    productId: _id,
+    title,
+    img,
+    desc,
+    categories,
+    size,
+    color,
+    price,
+    quantity,
+    inStock,
+  };
+
+  console.log("CART PRODUCT---->", req.body);
   try {
-    const savedCart = await newCart.save();
+    const savedCart = await Cart.updateOne(
+      { userId },
+      { $push: { products: product } },
+      { upsert: true }
+    );
+
     res.status(200).json(savedCart);
   } catch (err) {
     res.status(500).json(err);
@@ -62,6 +94,21 @@ router.get("/", verifyTokenAndAdmin, async (req, res) => {
   try {
     const carts = await Cart.find();
     res.status(200).json(carts);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+// GET All CART PRODUCTS
+router.get("/products/:userId", async (req, res) => {
+  // verifyToken added
+  try {
+    const cart = await Cart.findOne({ userId: req.params.userId });
+    if (cart) {
+      const products = cart?.products;
+      res.status(200).json(products);
+    }
+    res.status(200).json([]);
   } catch (err) {
     res.status(500).json(err);
   }
