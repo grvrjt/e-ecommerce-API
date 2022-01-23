@@ -28,18 +28,13 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-    console.log("ADMIN DATA ---->", req.body);
     const user = await User.findOne({ userName: req.body.userName });
-    console.log("loggedin user", { user });
     !user && res.status(401).json("Wrong credentials!");
     const hashedPassword = CryptoJS.AES.decrypt(
       user.password,
       process.env.PASS_SEC
     );
     const OriginalPassword = hashedPassword.toString(CryptoJS.enc.Utf8);
-
-    console.log({ user, hashedPassword, OriginalPassword });
-
     OriginalPassword !== req.body.password &&
       res.status(401).json("Wrong credentials!");
 
