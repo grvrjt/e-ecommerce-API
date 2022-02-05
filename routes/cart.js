@@ -38,7 +38,6 @@ router.post("/", async (req, res) => {
     inStock,
   };
 
-  console.log("CART PRODUCT---->", req.body);
   try {
     const savedCart = await Cart.updateOne(
       { userId },
